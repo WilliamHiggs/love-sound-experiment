@@ -1,16 +1,21 @@
 
-function flipNegativeIntSigns( inputData )
-  if inputData < 0 then
-    return inputData * -1
-  end
-  return inputData
-end
+Gamestate = require "hump.gamestate"
+
+local graphicOne = {}
+local height = love.graphics.getHeight()
+local width = love.graphics.getWidth()
 
 function love.load( )
+
+  -- load first graphic state
+  Gamestate.registerEvents()
+  Gamestate.switch(graphicOne)
+
   -- Load the recording device https://love2d.org/wiki/RecordingDevice
   devices = love.audio.getRecordingDevices( )
   recordingDevice = devices[1]
 
+  -- device infomation
   deviceName = recordingDevice:getName()
   samplecount = recordingDevice:getSampleCount()
   samplerate = recordingDevice:getSampleRate()
@@ -18,9 +23,7 @@ function love.load( )
   channels = recordingDevice:getChannelCount()
   minsamples = 1
 
-  height = love.graphics.getHeight()
-  width = love.graphics.getWidth()
-
+  -- initiate the recording device
   if recordingDevice then
     source = love.audio.newQueueableSource( samplerate, bitdepth, channels )
     recordingDevice:start()
@@ -30,7 +33,7 @@ function love.load( )
 
 end
 
-function love.update( dt )
+function graphicOne:update( dt )
 
   if recordingDevice:isRecording( ) and recordingDevice:getSampleCount( ) > minsamples then
 	  data = recordingDevice:getData( )
@@ -39,7 +42,7 @@ function love.update( dt )
 
 end
 
-function love.draw()
+function graphicOne:draw()
 
   sliceWidth = width * 1.0 / data:getSampleCount()
   dataPoints = {}
