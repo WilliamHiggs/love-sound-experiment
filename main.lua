@@ -18,6 +18,14 @@ function flipNegativeSign(input)
   return input
 end
 
+function rgb(red, green, blue)
+  local colorTable = {}
+  table.insert(colorTable, red / 255)
+  table.insert(colorTable, green / 255)
+  table.insert(colorTable, blue / 255)
+  return colorTable
+end
+
 function love.load()
 
   -- Start program timers
@@ -42,19 +50,18 @@ function love.load()
 
     -- load first graphic state
     Gamestate.registerEvents()
-    Gamestate.switch(graphicFour)
+    Gamestate.switch(graphicOne)
   end
 
---[[
   function love.keypressed(key)
-    if key == 'up' then
-      if Gamestate.current() == graphicOne then Gamestate.switch(graphicOne, graphicTwo) end
-      if Gamestate.current() == graphicTwo then Gamestate.switch(graphicTwo, graphicThree) end
-      if Gamestate.current() == graphicThree then Gamestate.switch(graphicThree, graphicFour) end
-      if Gamestate.current() == graphicFour then Gamestate.switch(graphicFour, graphicOne) end
+    if key == "up" then
+      if Gamestate.current() == graphicOne then return Gamestate.switch(graphicTwo) end
+      if Gamestate.current() == graphicTwo then return Gamestate.switch(graphicThree) end
+      if Gamestate.current() == graphicThree then return Gamestate.switch(graphicFour) end
+      if Gamestate.current() == graphicFour then return Gamestate.switch(graphicOne) end
     end
   end
-]]--
+
   function queueData()
     local minsamples = 1
     if recordingDevice:isRecording( ) and recordingDevice:getSampleCount( ) > minsamples then
@@ -62,6 +69,10 @@ function love.load()
   	  source:queue( data )
     end
   end
+
+  -- load logos and images
+  logo = love.graphics.newImage("/assets/LIG - thintext - smaller.png")
+
 
 end
 
@@ -121,6 +132,7 @@ end
 -- neutral background
 -- @SONG
 -- Colour
+
 function graphicTwo:enter()
 
   runTimer = Timer.new()
@@ -142,7 +154,22 @@ function graphicTwo:update(dt)
 end
 
 function graphicTwo:draw()
+
+  love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 0)
+  
   if data then
+    -- logo image
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(
+      logo,
+      width / 2 ,
+      height / 2,
+      data:getSample(1),
+      1, 1,
+      logo:getWidth() / 2,
+      logo:getHeight() / 2
+    )
+
     for count = 1, data:getSampleCount() - 1 do
 
       love.graphics.setColor(1, 1, 1)
@@ -168,6 +195,11 @@ end
 -- @SONG
 -- Echoes
 
+function graphicThree:enter()
+  gold = rgb(212, 175, 55)
+  darkRed = rgb(125, 10, 2)
+end
+
 function graphicThree:update( dt )
 
   queueData()
@@ -175,16 +207,48 @@ function graphicThree:update( dt )
 end
 
 function graphicThree:draw()
+
+  love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 0)
+
+  -- darkRed stripe
+  love.graphics.setColor(darkRed[1], darkRed[2], darkRed[3])
+  love.graphics.rectangle("fill", 0, height / 2 - 200, width, 400)
+
+  -- gold stripe
+  love.graphics.setColor(gold[1], gold[2], gold[3])
+  love.graphics.rectangle("fill", 0, height / 2 - 100, width, 200)
+
+  -- black stripe
+  love.graphics.setColor(0.1, 0.1, 0.1)
+  love.graphics.rectangle("fill", 0, height / 2 - 50, width, 100)
+
   if data then
+
+    -- logo image
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(
+      logo,
+      width / 2 ,
+      height / 2,
+      data:getSample(1),
+      1, 1,
+      logo:getWidth() / 2,
+      logo:getHeight() / 2
+    )
 
     local spread = width / data:getSampleCount()
     local currentPoint = 0
-    love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 0)
 
     for i = 1, data:getSampleCount() - 1 do
       love.graphics.setColor(1, 1, 1)
       love.graphics.setPointSize(data:getSample( i ) * 500)
-      love.graphics.points(currentPoint, height / 2, currentPoint, height * data:getSample(i) * spread)
+      love.graphics.points(
+        currentPoint,
+        height / 2,
+        currentPoint,
+        height * data:getSample(i) * spread
+      )
+
       currentPoint = currentPoint + spread
     end
 
