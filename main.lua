@@ -26,10 +26,28 @@ function rgb(red, green, blue)
   return colorTable
 end
 
+function peakAmplitude(sounddata)
+  local peak_amp = - math.huge
+  for t = 0, sounddata:getSampleCount() - 1 do
+    local amp = math.abs(sounddata:getSample(t)) -- |s(t)|
+    peak_amp = math.max(peak_amp, amp)
+  end
+  return peak_amp
+end
+
+function rmsAmplitude(sounddata)
+  local amp = 0
+  for t = 0,sounddata:getSampleCount()-1 do
+    amp = amp + sounddata:getSample(t)^2 -- (s(t))^2
+  end
+  return math.sqrt(amp / sounddata:getSampleCount())
+end
+
 function love.load()
 
   -- Start program timers
   startTime = love.timer.getTime()
+  masterTimer = Timer.new()
 
   -- Load the recording device https://love2d.org/wiki/RecordingDevice
   devices = love.audio.getRecordingDevices( )
@@ -53,6 +71,7 @@ function love.load()
     Gamestate.switch(graphicOne)
   end
 
+--[[
   function love.keypressed(key)
     if key == "up" then
       if Gamestate.current() == graphicOne then return Gamestate.switch(graphicTwo) end
@@ -61,6 +80,15 @@ function love.load()
       if Gamestate.current() == graphicFour then return Gamestate.switch(graphicOne) end
     end
   end
+]]--
+
+  -- Change graphic every 10 minutes
+  masterTimer:every(600, function()
+    if Gamestate.current() == graphicOne then return Gamestate.switch(graphicTwo) end
+    if Gamestate.current() == graphicTwo then return Gamestate.switch(graphicThree) end
+    if Gamestate.current() == graphicThree then return Gamestate.switch(graphicFour) end
+    if Gamestate.current() == graphicFour then return Gamestate.switch(graphicOne) end
+  end)
 
   function queueData()
     local minsamples = 1
@@ -71,8 +99,9 @@ function love.load()
   end
 
   -- load logos and images
-  logo = love.graphics.newImage("/assets/LIG - thintext - smaller.png")
-
+  roundLogo = love.graphics.newImage("/assets/LIG - thintext - smaller.png")
+  straightLogo = love.graphics.newImage("/assets/new logo straight.png")
+  italicLogo = love.graphics.newImage("/assets/new logo italics.png")
 
 end
 
@@ -88,6 +117,7 @@ end
 function graphicOne:update( dt )
 
   queueData()
+  masterTimer:update(dt)
 
 end
 
@@ -115,9 +145,20 @@ function graphicOne:draw()
       love.graphics.rectangle("fill", y, x * 2, 7, 7)
       love.graphics.rectangle("fill", y, x * 2, 7, 7)
 
-
       x = x + sliceWidth
     end
+
+    -- Draw Logo
+    love.graphics.setColor(1, 0.6, 0.6)
+    love.graphics.draw(
+      italicLogo,
+      width / 2,
+      height / 2,
+      data:getSample(1),
+      1, 1,
+      italicLogo:getWidth() / 2,
+      italicLogo:getHeight() / 2
+    )
   end
 end
 
@@ -150,24 +191,25 @@ function graphicTwo:update(dt)
 
   queueData()
   runTimer:update(dt)
+  masterTimer:update(dt)
 
 end
 
 function graphicTwo:draw()
 
   love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 0)
-  
+
   if data then
     -- logo image
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(
-      logo,
-      width / 2 ,
+      italicLogo,
+      width / 2,
       height / 2,
       data:getSample(1),
-      1, 1,
-      logo:getWidth() / 2,
-      logo:getHeight() / 2
+      0.8, 0.8,
+      italicLogo:getWidth() / 2,
+      italicLogo:getHeight() / 2
     )
 
     for count = 1, data:getSampleCount() - 1 do
@@ -203,6 +245,7 @@ end
 function graphicThree:update( dt )
 
   queueData()
+  masterTimer:update(dt)
 
 end
 
@@ -227,13 +270,13 @@ function graphicThree:draw()
     -- logo image
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(
-      logo,
-      width / 2 ,
+      italicLogo,
+      width / 2,
       height / 2,
       data:getSample(1),
-      1, 1,
-      logo:getWidth() / 2,
-      logo:getHeight() / 2
+      0.8, 0.8,
+      italicLogo:getWidth() / 2,
+      italicLogo:getHeight() / 2
     )
 
     local spread = width / data:getSampleCount()
@@ -298,6 +341,7 @@ function graphicFour:update(dt)
     queueData()
     Timer.update(dt)
     runTimer:update(dt)
+    masterTimer:update(dt)
 
   if data then
     for i = 1, data:getSampleCount() - 1 do
@@ -308,6 +352,16 @@ function graphicFour:update(dt)
 end
 
 function graphicFour:draw()
+
+  love.graphics.draw(
+    italicLogo,
+    width / 2,
+    height / 2,
+    data:getSample(1),
+    1, 1,
+    italicLogo:getWidth() / 2,
+    italicLogo:getHeight() / 2
+  )
   view:attach()
   love.graphics.setBackgroundColor(0.1, 0.1, 0.1)
 
