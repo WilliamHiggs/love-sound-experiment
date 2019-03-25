@@ -2,6 +2,7 @@
 Gamestate = require "hump.gamestate"
 Timer = require "hump.timer"
 Camera = require "hump.camera"
+soundUtil = require "soundUtil"
 
 local graphicOne = {}
 local graphicTwo = {}
@@ -24,23 +25,6 @@ function rgb(red, green, blue)
   table.insert(colorTable, green / 255)
   table.insert(colorTable, blue / 255)
   return colorTable
-end
-
-function peakAmplitude(sounddata)
-  local peak_amp = - math.huge
-  for t = 0, sounddata:getSampleCount() - 1 do
-    local amp = math.abs(sounddata:getSample(t)) -- |s(t)|
-    peak_amp = math.max(peak_amp, amp)
-  end
-  return peak_amp
-end
-
-function rmsAmplitude(sounddata)
-  local amp = 0
-  for t = 0,sounddata:getSampleCount()-1 do
-    amp = amp + sounddata:getSample(t)^2 -- (s(t))^2
-  end
-  return math.sqrt(amp / sounddata:getSampleCount())
 end
 
 function love.load()
@@ -384,3 +368,10 @@ end
 function graphicFour:leave()
   runTimer:clear()
 end
+
+-- GraphicFive : Tweening
+-- Tweens shapes using getSample()
+-- @DESIGN
+-- possible graphics or PNGs?
+-- @SONG
+-- PiffWang
